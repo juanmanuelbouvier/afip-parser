@@ -264,7 +264,7 @@ def print_cbte_output(register, output_file):
     output_file.write("PES")        # Codigo moneda
     output_file.write("0001000000") # Tipo de cambio
     output_file.write("1")          # Cant alicuotas de IVA
-    output_file.write("5")          # Codigo de operacion
+    output_file.write("0")          # Codigo de operacion
     output_file.write("{}".format(register[IVA]))
     output_file.write("0" * 15)     # Otros Tributos
     output_file.write("0" * 11)     # CUIT emisor/corredor
