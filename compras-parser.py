@@ -71,7 +71,7 @@ def is_nro_comprobante(value):
 def parse_pto_venta(nro):
     pattern = re.compile("[0-9]{4}-")
     match = re.match(pattern, nro).group(0)
-    return '0' + match[0:4]
+    return '0' + (match[0:4] if match[0:4] != "0000" else "0001")
 
 
 def parse_nro_comprobante(nro):
@@ -249,7 +249,7 @@ def print_cbte_output(register, output_file):
     output_file.write("{}".format(register[TIPO_COMPRA]))
     output_file.write("{}".format(register[PUNTO_VENTA]))
     output_file.write("{}".format(register[NRO_COMPROBANTE]))
-    output_file.write(" " * 16)
+    output_file.write(" " * 16)     # Despacho de importacion
     output_file.write("80")         # Codigo de documento del vendedor
     output_file.write("{}".format(register[ID_VENDEDOR]))
     output_file.write("{}".format(register[RAZON_SOCIAL]))
