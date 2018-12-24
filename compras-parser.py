@@ -13,6 +13,8 @@ DESPACHO_IMPORTACION = "DespachoImprentas"
 ID_VENDEDOR = "IdVendedor"
 RAZON_SOCIAL = "RazonSocial"
 IMP_TOTAL_OP = "ImporteTotalOperacion"
+IMP_NETO_GRAV = "ImporteNetoGravado"
+IMPUESTO_LIQ = "ImpuestoLiquidado"
 
 
 def load_dataframe(directory, filename):
@@ -73,7 +75,7 @@ def parse_pto_venta(nro):
 def parse_nro_comprobante(nro):
     pattern = re.compile("-[0-9]{8}")
     match = re.search(pattern, nro).group(0)
-    return ('0' * 12) + match[1:13]
+    return ('0' * 12) + match[1::]
 
 
 def is_cuit(value):
@@ -111,10 +113,40 @@ def is_total(feature, value):
         return False
 
 
-def parse_imp_total_op(total):
-    integer, decimal = total.split('.')
+def parse_decimal_number(number):
+    integer, decimal = number.split('.')
     zeros = '0' * (13 - len(integer))
     return zeros + integer + decimal
+
+
+def extract_neto(raw):
+    split = raw.split(" ")
+    if len(split) > 1:
+        neto = split[1]
+    else:
+        neto = split[0]
+    return neto
+
+
+def is_neto_gravado(feature, value):
+    try:
+        neto = extract_neto(value)
+        integer, decimal = neto.split('.')
+        return "Neto Gravado" in feature
+    except Exception:
+        return False
+
+
+def parse_neto_gravado(raw):
+    return parse_decimal_number(extract_neto(raw))
+
+
+def is_iva(feature, value):
+    try:
+        integer, decimal = value.split('.')
+        return "IVA" in feature
+    except Exception:
+        return False
 
 
 def parse(cell, coln, feature, register):
@@ -126,12 +158,18 @@ def parse(cell, coln, feature, register):
         register[PUNTO_VENTA] = parse_pto_venta(cell)
         register[NRO_COMPROBANTE] = parse_nro_comprobante(cell)
         register[DESPACHO_IMPORTACION] = parse_nro_comprobante(cell)
+        if is_neto_gravado(feature, cell):  # Tabula puts them in same column
+            register[IMP_NETO_GRAV] = parse_neto_gravado(cell)
     elif is_cuit(cell):
         register[ID_VENDEDOR] = parse_id_vendedor(cell)
     elif is_razon_social(coln):
         register[RAZON_SOCIAL] = parse_razon_social(cell)
     elif is_total(feature, cell):
-        register[IMP_TOTAL_OP] = parse_imp_total_op(cell)
+        register[IMP_TOTAL_OP] = parse_decimal_number(cell)
+    elif is_neto_gravado(feature, cell):
+        register[IMP_NETO_GRAV] = parse_neto_gravado(cell)
+    elif is_iva(feature, cell):
+        register[IMPUESTO_LIQ] = parse_decimal_number(cell)
 
 
 def is_valid_register(register):
@@ -142,10 +180,12 @@ def is_valid_register(register):
            and register.has_key(DESPACHO_IMPORTACION)\
            and register.has_key(ID_VENDEDOR)\
            and register.has_key(RAZON_SOCIAL)\
-           and register.has_key(IMP_TOTAL_OP)
+           and register.has_key(IMP_TOTAL_OP)\
+           and register.has_key(IMP_NETO_GRAV)\
+           and register.has_key(IMPUESTO_LIQ)
 
 
-def print_output(register, output_file):
+def print_cbte_output(register, output_file):
     output_file.write("{}".format(register[FECHA_COMPRA]))
     output_file.write("{}".format(register[TIPO_COMPRA]))
     output_file.write("{}".format(register[PUNTO_VENTA]))
@@ -160,6 +200,18 @@ def print_output(register, output_file):
     output_file.write(os.linesep)
 
 
+def print_alicuotas_output(register, output_file):
+    output_file.write("{}".format(register[TIPO_COMPRA]))
+    output_file.write("{}".format(register[PUNTO_VENTA]))
+    output_file.write("{}".format(register[NRO_COMPROBANTE]))
+    output_file.write("80")     # Codigo de documento del vendedor
+    output_file.write("{}".format(register[ID_VENDEDOR]))
+    output_file.write("{}".format(register[IMP_NETO_GRAV]))
+    output_file.write("0005")   # Alicuota de IVA (21%)
+    output_file.write("{}".format(register[IMPUESTO_LIQ]))
+    output_file.write(os.linesep)
+
+
 def mkdir(output_filename):
     if not os.path.exists(os.path.dirname(output_filename)):
         os.makedirs(os.path.dirname(output_filename))
@@ -168,9 +220,10 @@ def mkdir(output_filename):
 def transcript(input_directory, filename, output_directory):
     df = load_dataframe(input_directory, filename)
     header = df.head(1)
-    output_filename = output_directory + "/" + filename.split('.')[0] + ".txt"
-    mkdir(output_filename)
-    with open(output_filename, "w") as output_file:
+    cbte_output_filename = output_directory + "/" + "CBTE_" + filename.split('.')[0] + ".txt"
+    alicuotas_output_filename = output_directory + "/" + "ALICUOTAS_" + filename.split('.')[0] + ".txt"
+    mkdir(cbte_output_filename)
+    with open(cbte_output_filename, "w") as cbte_output_file, open(alicuotas_output_filename, "w") as alicuotas_output_file:
         for index, row in df.iterrows():
             register = {}
             coln = 0
@@ -178,7 +231,8 @@ def transcript(input_directory, filename, output_directory):
                 parse(row[feat], coln, feat, register)
                 coln += 1
             if is_valid_register(register):
-                print_output(register, output_file)
+                print_cbte_output(register, cbte_output_file)
+                print_alicuotas_output(register, alicuotas_output_file)
 
 
 def main():
