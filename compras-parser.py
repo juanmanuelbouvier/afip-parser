@@ -271,7 +271,7 @@ def print_cbte_output(register, output_file):
     output_file.write("{}".format(register[RAZON_SOCIAL]))
     output_file.write("{}".format(register[IMP_TOTAL_OP]))
     output_file.write("{}".format(register[IMP_EX_INT_OT]))
-    output_file.write("{}".format(register[IMP_RS_RNI]))
+    output_file.write("{}".format(register[IMP_RS_RNI]) if register[TIPO_COMPRA] != "001" else ("0" * 15))
     output_file.write("{}".format(register[IMP_PERCEPCIONES]))
     output_file.write("0" * 15)     # Percepciones o pagos a cuenta de otros impuestos nacionales
     output_file.write("0" * 15)     # Percepciones de IIBB
