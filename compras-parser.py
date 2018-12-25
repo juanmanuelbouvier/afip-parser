@@ -263,7 +263,7 @@ def print_cbte_output(register, output_file):
     output_file.write("0" * 15)     # Impuestos Internos
     output_file.write("PES")        # Codigo moneda
     output_file.write("0001000000") # Tipo de cambio
-    output_file.write("1")          # Cant alicuotas de IVA
+    output_file.write("1" if register[TIPO_COMPRA] != "011" else "0")          # Cant alicuotas de IVA
     output_file.write("0")          # Codigo de operacion
     output_file.write("{}".format(register[IVA]))
     output_file.write("0" * 15)     # Otros Tributos
