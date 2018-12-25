@@ -37,9 +37,10 @@ def parse_fecha_cpa(date):
     return datetime.strptime(date, "%d/%m/%Y").strftime("%Y%m%d")
 
 
-def is_comp_tipo(value):
+def is_comp_tipo(value, feature):
     try:
-        if value.startswith("FAC"):
+        pattern_fac = re.compile("FAC")
+        if "Comp" in feature and re.search(pattern_fac, value):
             return True
         else:
             return False
@@ -48,11 +49,14 @@ def is_comp_tipo(value):
 
 
 def parse_comp_tipo(tipo):
-    if tipo.endswith("A"):
+    pattern_A = re.compile("FAC[ ]*A")
+    pattern_B = re.compile("FAC[ ]*B")
+    pattern_C = re.compile("FAC[ ]*C")
+    if re.search(pattern_A, tipo):
         return "001"
-    elif tipo.endswith("B"):
+    elif re.search(pattern_B, tipo):
         return "006"
-    elif tipo.endswith("C"):
+    elif re.search(pattern_C, tipo):
         return "011"
     else:
         raise Exception("No existe factura de tipo " + tipo)
@@ -214,7 +218,7 @@ def is_iva(feature, value):
 def parse(cell, feature, register):
     if is_date(cell):
         register[FECHA_COMPRA] = parse_fecha_cpa(cell)
-    elif is_comp_tipo(cell):
+    elif is_comp_tipo(cell, feature):
         register[TIPO_COMPRA] = parse_comp_tipo(cell)
     elif is_nro_comprobante(cell):
         register[PUNTO_VENTA] = parse_pto_venta(cell)
