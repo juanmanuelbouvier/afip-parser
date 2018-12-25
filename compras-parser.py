@@ -98,28 +98,38 @@ def parse_id_vendedor(cuit):
     return ('0' * 9) + match.replace('-', '')
 
 
-def is_razon_social(coln):
-    return coln == 0    # Razon social es la primera columna
+def is_razon_social(feature):
+    return "social" in feature
 
 
-def parse_razon_social(razon_social):
-    trimmed = ' '.join(razon_social.split())
-    decoded = trimmed.replace('Ñ', 'N')
-    whitespaces = ' ' * (30 - len(decoded))
-    return decoded + whitespaces
+def parse_razon_social(razon_social, feature):
+    parsed = razon_social
+    if "IVA" in feature:
+        parsed = razon_social.replace("RI", "")
+    decoded = parsed.replace('Ñ', 'N')
+    trimmed = ' '.join(decoded.split())
+    whitespaces = ' ' * (30 - len(trimmed))
+    return trimmed + whitespaces
+
+
+def split_number(value):
+    integer, decimal = str(value).split('.')
+    return integer, decimal
 
 
 def is_total(feature, value):
     try:
-        integer, decimal = value.split('.')
-        return feature == "Total"
+        split_number(value)
+        return "Total" in feature
     except Exception:
         return False
 
 
 def parse_decimal_number(number):
-    integer, decimal = number.split('.')
-    zeros = '0' * (13 - len(integer))
+    integer, decimal = split_number(number)
+    if len(decimal) == 1:
+        decimal += '0'
+    zeros = '0' * (15 - len(integer + decimal))
     return zeros + integer + decimal
 
 
@@ -135,7 +145,7 @@ def extract_neto(raw):
 def is_neto_gravado(feature, value):
     try:
         neto = extract_neto(value)
-        integer, decimal = neto.split('.')
+        split_number(neto)
         return "Neto Gravado" in feature
     except Exception:
         return False
@@ -158,7 +168,7 @@ def extract_rs_rni(raw):
 def is_ex_int_ot(feature, value):
     try:
         ex_int_ot = extract_ex_int_ot(value)
-        integer, decimal = ex_int_ot.split('.')
+        split_number(ex_int_ot)
         return "Ex/Int/Ot" in feature
     except Exception:
         return False
@@ -167,7 +177,7 @@ def is_ex_int_ot(feature, value):
 def is_rs_rni(feature, value):
     try:
         rs_rni = extract_rs_rni(value)
-        integer, decimal = rs_rni.split('.')
+        split_number(rs_rni)
         return "RS/Rni" in feature
     except Exception:
         return False
@@ -187,7 +197,7 @@ def parse_rs_rni(raw):
 
 def is_percepcion(feature, value):
     try:
-        integer, decimal = value.split('.')
+        split_number(value)
         return "Percepci" in feature
     except Exception:
         return False
@@ -195,13 +205,13 @@ def is_percepcion(feature, value):
 
 def is_iva(feature, value):
     try:
-        integer, decimal = value.split('.')
+        split_number(value)
         return "IVA" in feature
     except Exception:
         return False
 
 
-def parse(cell, coln, feature, register):
+def parse(cell, feature, register):
     if is_date(cell):
         register[FECHA_COMPRA] = parse_fecha_cpa(cell)
     elif is_comp_tipo(cell):
@@ -223,8 +233,8 @@ def parse(cell, coln, feature, register):
         register[IMP_PERCEPCIONES] = parse_decimal_number(cell)
     elif is_cuit(cell):
         register[ID_VENDEDOR] = parse_id_vendedor(cell)
-    elif is_razon_social(coln):
-        register[RAZON_SOCIAL] = parse_razon_social(cell)
+    elif is_razon_social(feature):
+        register[RAZON_SOCIAL] = parse_razon_social(cell, feature)
     elif is_total(feature, cell):
         register[IMP_TOTAL_OP] = parse_decimal_number(cell)
     elif is_iva(feature, cell):
@@ -301,10 +311,8 @@ def transcript(input_directory, filename, output_directory):
     with open(cbte_output_filename, "w") as cbte_output_file, open(alicuotas_output_filename, "w") as alicuotas_output_file:
         for index, row in df.iterrows():
             register = {}
-            coln = 0
             for feat in header:
-                parse(row[feat], coln, feat, register)
-                coln += 1
+                parse(row[feat], feat, register)
             if is_valid_register(register):
                 print_cbte_output(register, cbte_output_file)
                 print_alicuotas_output(register, alicuotas_output_file)
