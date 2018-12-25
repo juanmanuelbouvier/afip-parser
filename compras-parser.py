@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 import sys
 import os
@@ -103,8 +104,9 @@ def is_razon_social(coln):
 
 def parse_razon_social(razon_social):
     trimmed = ' '.join(razon_social.split())
-    whitespaces = ' ' * (30 - len(trimmed.decode('utf-8')))
-    return trimmed + whitespaces
+    decoded = trimmed.replace('Ñ', 'N')
+    whitespaces = ' ' * (30 - len(decoded))
+    return decoded + whitespaces
 
 
 def is_total(feature, value):
