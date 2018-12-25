@@ -270,7 +270,7 @@ def print_cbte_output(register, output_file):
     output_file.write("0" * 11)     # CUIT emisor/corredor
     output_file.write(" " * 30)     # Denominacion del emisor/corredor
     output_file.write("0" * 15)     # IVA comision
-    output_file.write("\n")
+    output_file.write("\r\n")
 
 
 def print_alicuotas_output(register, output_file):
@@ -282,7 +282,7 @@ def print_alicuotas_output(register, output_file):
     output_file.write("{}".format(register[IMP_NETO_GRAV]))
     output_file.write("0005")       # Alicuota de IVA (21%)
     output_file.write("{}".format(register[IVA]))
-    output_file.write("\n")
+    output_file.write("\r\n")
 
 
 def mkdir(output_filename):
