@@ -22,7 +22,7 @@ Usar **Tabula** (https://tabula.technology/), ya que el script parsea las column
 
 Recordemos que debido a los problemas del PDF todos los conversores presentan algún inconveniente en la transformación de las tablas. No se garantiza el correcto funcionamiento del script en caso de usar cualquier otro conversor.
 
-### Insutrcciones de Tabula
+### Instrucciones de Tabula
 - Iniciar aplicación.
 - Cargar en la página principal el PDF que se desea convertir e importarlo.
 - Esperar que se procese el archivo y clickear `Extract Data`.
