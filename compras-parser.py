@@ -332,6 +332,20 @@ def mkdir(output_filename):
         os.makedirs(os.path.dirname(output_filename))
 
 
+def clean_file(directory, filename):
+    path = directory + "/" + filename
+    with open(path, 'r') as f:
+        newlines = []
+        index = 0
+        for line in f.readlines():
+            if (index == 0 or "Raz. social" not in line) and "Transporte:" not in line:
+                newlines.append(line)
+            index += 1
+    with open(path, "w") as f:
+        for line in newlines:
+            f.write(line)
+
+
 def transcript(input_directory, filename, output_directory):
     df = load_dataframe(input_directory, filename)
     header = df.head(1)
@@ -354,6 +368,7 @@ def main():
     output_directory = sys.argv[2] if len(sys.argv) > 2 else 'resultados'
     for filename in sorted(os.listdir(input_directory)):
         if filename.endswith('.csv'):
+            clean_file(input_directory, filename)
             transcript(input_directory, filename, output_directory)
 
 
