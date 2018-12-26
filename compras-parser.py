@@ -260,6 +260,12 @@ def is_valid_register(register):
            and register.has_key(IVA)
 
 
+"""Si la factura es tipo A, tiene base gravada y el IVA es 0, en realidad debería ser factura tipo C"""
+def correct_comp_tipo(register):
+    if register[TIPO_COMPRA] == "001" and int(register[IMP_NETO_GRAV]) > 0 and int(register[IVA]) == 0:
+        register[TIPO_COMPRA] = "011"
+
+
 def print_cbte_output(register, output_file):
     output_file.write("{}".format(register[FECHA_COMPRA]))
     output_file.write("{}".format(register[TIPO_COMPRA]))
@@ -319,6 +325,7 @@ def transcript(input_directory, filename, output_directory):
             for feat in header:
                 parse(row[feat], feat, register)
             if is_valid_register(register):
+                correct_comp_tipo(register)
                 print_cbte_output(register, cbte_output_file)
                 print_alicuotas_output(register, alicuotas_output_file)
 
