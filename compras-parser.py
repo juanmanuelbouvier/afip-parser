@@ -39,7 +39,7 @@ def parse_fecha_cpa(date):
 
 def is_comp_tipo(value, feature):
     try:
-        if "Comp" in feature and ("FAC" in value or "NCR" in value):
+        if "Comp" in feature and (("FAC" in value) or ("NCR" in value) or ("NDE" in value)):
             return True
         else:
             return False
@@ -48,25 +48,35 @@ def is_comp_tipo(value, feature):
 
 
 def parse_comp_tipo(tipo):
-    pattern_A = re.compile("FAC[ ]*A")
-    pattern_B = re.compile("FAC[ ]*B")
-    pattern_C = re.compile("FAC[ ]*C")
-    if re.search(pattern_A, tipo):
+    pattern_fac_a = re.compile("FAC[ ]*A")
+    pattern_fac_b = re.compile("FAC[ ]*B")
+    pattern_fac_c = re.compile("FAC[ ]*C")
+    pattern_ncr_a = re.compile("NCR[ ]*A")
+    pattern_ncr_b = re.compile("NCR[ ]*B")
+    pattern_nde_a = re.compile("NDE[ ]*A")
+    pattern_nde_b = re.compile("NDE[ ]*B")
+    if re.search(pattern_fac_a, tipo):
         return "001"
-    elif re.search(pattern_B, tipo):
+    elif re.search(pattern_fac_b, tipo):
         return "006"
-    elif re.search(pattern_C, tipo):
+    elif re.search(pattern_fac_c, tipo):
         return "011"
-    elif "NCR" in tipo:
+    elif re.search(pattern_ncr_a, tipo):
         return "003"
+    elif re.search(pattern_ncr_b, tipo):
+        return "008"
+    elif re.search(pattern_nde_a, tipo):
+        return "002"
+    elif re.search(pattern_nde_b, tipo):
+        return "007"
     else:
         raise Exception("No existe comprobante de tipo " + tipo)
 
 
-def is_nro_comprobante(value):
+def is_nro_comprobante(value, feature):
     try:
         pattern = re.compile("[0-9]{4}-")
-        if re.match(pattern, value):
+        if "comprobante" in feature and re.match(pattern, value):
             return True
         else:
             return False
@@ -119,7 +129,7 @@ def parse_razon_social(razon_social, feature):
 
 def split_number(value):
     integer, decimal = str(value).split('.')
-    return integer, decimal
+    return integer.replace('-', ''), decimal
 
 
 def is_total(feature, value):
@@ -221,7 +231,7 @@ def parse(cell, feature, register):
         register[FECHA_COMPRA] = parse_fecha_cpa(cell)
     elif is_comp_tipo(cell, feature):
         register[TIPO_COMPRA] = parse_comp_tipo(cell)
-    elif is_nro_comprobante(cell):
+    elif is_nro_comprobante(cell, feature):
         register[PUNTO_VENTA] = parse_pto_venta(cell)
         register[NRO_COMPROBANTE] = parse_nro_comprobante(cell)
         if is_neto_gravado(feature, cell):  # Tabula puts them in same column
@@ -261,14 +271,18 @@ def is_valid_register(register):
            and register.has_key(IVA)
 
 
-"""Si la factura es tipo A, tiene base gravada y el IVA es 0, en realidad debería ser factura tipo C"""
+def is_A(register):
+    return register[TIPO_COMPRA] in ["001", "002", "003"]
+
+
+"""Si el comprobante es tipo A, tiene base gravada y el IVA es 0, en realidad debería ser factura tipo C"""
 def correct_comp_tipo(register):
-    if register[TIPO_COMPRA] == "001" and int(register[IMP_NETO_GRAV]) > 0 and int(register[IVA]) == 0:
+    if is_A(register) and int(register[IMP_NETO_GRAV]) > 0 and int(register[IVA]) == 0:
         register[TIPO_COMPRA] = "011"
 
 
 def has_alicuotas(register):
-    return register[TIPO_COMPRA] == "001"   # Solo FAC A tiene alicuotas de IVA
+    return is_A(register)
 
 
 def print_cbte_output(register, output_file):
