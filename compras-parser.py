@@ -290,15 +290,16 @@ def print_cbte_output(register, output_file):
 
 
 def print_alicuotas_output(register, output_file):
-    output_file.write("{}".format(register[TIPO_COMPRA]))
-    output_file.write("{}".format(register[PUNTO_VENTA]))
-    output_file.write("{}".format(register[NRO_COMPROBANTE]))
-    output_file.write("80")         # Codigo de documento del vendedor
-    output_file.write("{}".format(register[ID_VENDEDOR]))
-    output_file.write("{}".format(register[IMP_NETO_GRAV]))
-    output_file.write("0005")       # Alicuota de IVA (21%)
-    output_file.write("{}".format(register[IVA]))
-    output_file.write("\r\n")
+    if register[TIPO_COMPRA] != "011":  # FAC C no tiene alicuotas de IVA
+        output_file.write("{}".format(register[TIPO_COMPRA]))
+        output_file.write("{}".format(register[PUNTO_VENTA]))
+        output_file.write("{}".format(register[NRO_COMPROBANTE]))
+        output_file.write("80")         # Codigo de documento del vendedor
+        output_file.write("{}".format(register[ID_VENDEDOR]))
+        output_file.write("{}".format(register[IMP_NETO_GRAV]))
+        output_file.write("0005")       # Alicuota de IVA (21%)
+        output_file.write("{}".format(register[IVA]))
+        output_file.write("\r\n")
 
 
 def mkdir(output_filename):
