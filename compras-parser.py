@@ -266,6 +266,10 @@ def correct_comp_tipo(register):
         register[TIPO_COMPRA] = "011"
 
 
+def has_alicuotas(register):
+    return register[TIPO_COMPRA] == "001"   # Solo FAC A tiene alicuotas de IVA
+
+
 def print_cbte_output(register, output_file):
     output_file.write("{}".format(register[FECHA_COMPRA]))
     output_file.write("{}".format(register[TIPO_COMPRA]))
@@ -285,7 +289,7 @@ def print_cbte_output(register, output_file):
     output_file.write("0" * 15)     # Impuestos Internos
     output_file.write("PES")        # Codigo moneda
     output_file.write("0001000000") # Tipo de cambio
-    output_file.write("1" if register[TIPO_COMPRA] != "011" else "0")          # Cant alicuotas de IVA
+    output_file.write("1" if has_alicuotas(register) else "0")          # Cant alicuotas de IVA
     output_file.write("0")          # Codigo de operacion
     output_file.write("{}".format(register[IVA]))
     output_file.write("0" * 15)     # Otros Tributos
@@ -296,7 +300,7 @@ def print_cbte_output(register, output_file):
 
 
 def print_alicuotas_output(register, output_file):
-    if register[TIPO_COMPRA] != "011":  # FAC C no tiene alicuotas de IVA
+    if has_alicuotas(register):
         output_file.write("{}".format(register[TIPO_COMPRA]))
         output_file.write("{}".format(register[PUNTO_VENTA]))
         output_file.write("{}".format(register[NRO_COMPROBANTE]))
