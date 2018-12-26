@@ -21,6 +21,7 @@ Por lo tanto, se debe utilizar un conversor para pasar los archivos PDF a CSV, f
 Usar **Tabula** (https://tabula.technology/), ya que el script parsea las columnas de manera particular de acuerdo a cómo suele devolver la información ese conversor.
 
 Recordemos que debido a los problemas del PDF todos los conversores presentan algún inconveniente en la transformación de las tablas. No se garantiza el correcto funcionamiento del script en caso de usar cualquier otro conversor.
+Además, Tabula mismo presenta errores de formateo e inconsistencias incluso dentro de un mismo archivo, por lo tanto se podrían requerir concatenaciones manuales en caso de resultados truncos.
 
 ### Instrucciones de Tabula
 - Iniciar aplicación.
