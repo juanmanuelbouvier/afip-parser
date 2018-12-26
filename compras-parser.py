@@ -39,8 +39,7 @@ def parse_fecha_cpa(date):
 
 def is_comp_tipo(value, feature):
     try:
-        pattern_fac = re.compile("FAC")
-        if "Comp" in feature and re.search(pattern_fac, value):
+        if "Comp" in feature and ("FAC" in value or "NCR" in value):
             return True
         else:
             return False
@@ -58,8 +57,10 @@ def parse_comp_tipo(tipo):
         return "006"
     elif re.search(pattern_C, tipo):
         return "011"
+    elif "NCR" in tipo:
+        return "003"
     else:
-        raise Exception("No existe factura de tipo " + tipo)
+        raise Exception("No existe comprobante de tipo " + tipo)
 
 
 def is_nro_comprobante(value):
